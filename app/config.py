@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://nu_life:nu_life@localhost:5432/nu_life"
     redis_url: str = "redis://localhost:6379/0"
 
-    jwt_secret_key: str = "change-me"
+    jwt_secret_key: str = "please-generate-a-long-random-secret-for-real-deployments"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
 
