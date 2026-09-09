@@ -6,10 +6,10 @@ overselling capacity.
 
 ## Status
 
-Stage 2 (auth & core models) complete, on top of Stage 1's scaffolding
-(FastAPI skeleton, Postgres, Redis, Alembic, config, `/health`).
+Stage 3 (clubs & events) complete, on top of Stage 1's scaffolding and
+Stage 2's auth.
 
-Stage 2 adds:
+Stage 2 added:
 
 - `User` model + migration (email, password hash, name, `role` — `student` |
   `club_admin`).
@@ -23,8 +23,25 @@ Stage 2 adds:
   `InvalidCredentialsError`) that the router translates to HTTP responses
   via `app/common/exceptions.py`.
 
-Clubs/events/registration business logic is not implemented yet — that's
-Stage 3+.
+Stage 3 adds:
+
+- `Club` model (`app/clubs/`) and `Event` model (`app/events/`) + migrations.
+  `Event.registration_status` is `not_open | open | closed`; capacity is
+  stored but **not yet enforced** — that's Stage 4's registration engine.
+- Club admin endpoints: `POST /clubs` (create, becomes the club's admin),
+  `PATCH /clubs/{id}` (owner-only), `POST /events` (create under an owned
+  club), `PATCH /events/{id}` (owner-only), `POST /events/{id}/open` and
+  `POST /events/{id}/close` (strict `not_open → open → closed` transitions;
+  skipping a step or reopening returns 400).
+- Student/public browsing: `GET /clubs`, `GET /clubs/{id}`, `GET /events`
+  (filterable by `club_id`, `status`, `start_date`/`end_date`), `GET
+  /events/{id}`.
+- Ownership is enforced in the service layer (`NotClubOwnerError` → 403,
+  `*NotFoundError` → 404), independent of HTTP, following the same pattern
+  as `app/users/service.py`.
+
+Registration (capacity enforcement, waitlisting, concurrency safety) is not
+implemented yet — that's Stage 4.
 
 ## Tech stack
 
@@ -61,6 +78,8 @@ app/
     service.py            # business logic, HTTP-agnostic (AuthService)
     dependencies.py        # get_current_user, require_role, ...
     router.py               # /auth/register, /auth/login, /auth/me
+  clubs/             # models.py, schemas.py, repository.py, service.py, router.py
+  events/            # same shape; service.py imports ClubRepository for ownership checks
   main.py            # FastAPI app assembly
 alembic/             # migrations; env.py imports each feature's models.py
 tests/
