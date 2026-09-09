@@ -6,7 +6,7 @@ from sqlalchemy import Enum, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
-from app.db import Base
+from app.database import Base
 
 
 class UserRole(str, enum.Enum):

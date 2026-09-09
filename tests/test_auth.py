@@ -1,8 +1,8 @@
 import pytest
 from fastapi import HTTPException
 
-from app.api.deps import require_role
-from app.models.user import User, UserRole
+from app.users.dependencies import require_role
+from app.users.models import User, UserRole
 
 
 async def _register(client, email="alice@nu.edu.kz", password="password123", name="Alice", role="student"):

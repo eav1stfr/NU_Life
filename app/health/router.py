@@ -5,7 +5,8 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import get_db, get_redis
+from app.database import get_db
+from app.redis import get_redis
 
 router = APIRouter(tags=["health"])
 

@@ -1,6 +1,7 @@
 from httpx import ASGITransport, AsyncClient
 
-from app.db import get_db, get_redis
+from app.database import get_db
+from app.redis import get_redis
 
 
 class _FakeSession:

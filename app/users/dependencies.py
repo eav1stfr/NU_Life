@@ -2,24 +2,23 @@ import uuid
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import get_db
-from app.models.user import User, UserRole
-from app.repositories.user_repository import UserRepository
-from app.security import decode_access_token
+from app.common.dependencies import DBSessionDep
+from app.common.exceptions import Forbidden, Unauthorized
+from app.users.models import User, UserRole
+from app.users.repository import UserRepository
+from app.users.security import decode_access_token
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: DBSessionDep,
 ) -> User:
-    credentials_error = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
+    credentials_error = Unauthorized(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
@@ -43,7 +42,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 def require_role(*roles: UserRole):
     async def _check(user: CurrentUser) -> User:
         if user.role not in roles:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+            raise Forbidden(detail="Not authorized")
         return user
 
     return _check

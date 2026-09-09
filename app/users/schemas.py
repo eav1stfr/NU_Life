@@ -1,7 +1,17 @@
-from pydantic import BaseModel, EmailStr, Field
+import uuid
 
-from app.models.user import UserRole
-from app.schemas.user import UserPublic
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from app.users.models import UserRole
+
+
+class UserPublic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    email: EmailStr
+    name: str
+    role: UserRole
 
 
 class RegisterRequest(BaseModel):

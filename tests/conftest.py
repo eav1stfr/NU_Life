@@ -5,7 +5,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.db import Base, get_db
+from app.database import Base, get_db
 from app.main import app as fastapi_app
 
 TEST_DB_NAME = "nu_life_test"

@@ -1,6 +1,6 @@
-from app.models.user import User, UserRole
-from app.repositories.user_repository import UserRepository
-from app.security import create_access_token, hash_password, verify_password
+from app.users.models import User, UserRole
+from app.users.repository import UserRepository
+from app.users.security import create_access_token, hash_password, verify_password
 
 
 class EmailAlreadyRegisteredError(Exception):

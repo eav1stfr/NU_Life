@@ -15,12 +15,13 @@ Stage 2 adds:
   `club_admin`).
 - JWT auth: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`.
 - Reusable role-based access control as FastAPI dependencies
-  (`app/api/deps.py`): `get_current_user` (decodes the bearer token, loads
-  the user) and `require_role(*roles)` (403s if the current user's role
-  isn't in the allowed set — e.g. `require_club_admin`).
-- Business logic lives in `app/services/auth_service.py`, independent of
-  FastAPI, raising plain exceptions (`EmailAlreadyRegisteredError`,
-  `InvalidCredentialsError`) that the router translates to HTTP responses.
+  (`app/users/dependencies.py`): `get_current_user` (decodes the bearer
+  token, loads the user) and `require_role(*roles)` (403s if the current
+  user's role isn't in the allowed set — e.g. `require_club_admin`).
+- Business logic lives in `app/users/service.py`, independent of FastAPI,
+  raising plain exceptions (`EmailAlreadyRegisteredError`,
+  `InvalidCredentialsError`) that the router translates to HTTP responses
+  via `app/common/exceptions.py`.
 
 Clubs/events/registration business logic is not implemented yet — that's
 Stage 3+.
@@ -36,18 +37,39 @@ Stage 3+.
 
 ## Project layout
 
+Organized as vertical feature slices rather than horizontal layers: each
+feature under `app/` owns its full stack (models, schemas, repository,
+service, router, dependencies), so a feature can be read or changed in one
+place instead of jumping between parallel `routers/`, `services/`,
+`repositories/` trees.
+
 ```
 app/
-  api/           # routers (HTTP layer only)
-  services/      # business logic, unit-testable independent of HTTP
-  repositories/  # data access
-  models/        # SQLAlchemy models
-  config.py      # pydantic-settings, reads .env
-  db.py          # async engine/session + Redis client factories
-  main.py        # FastAPI app assembly
-alembic/         # migrations, wired to app settings + Base.metadata
+  config/          # pydantic-settings, reads .env
+  database.py      # async SQLAlchemy engine/session + declarative Base
+  redis.py         # Redis client factory
+  common/
+    dependencies.py  # shared Depends aliases (DBSessionDep, RedisDep)
+    exceptions.py     # HTTPException subclasses (NotFound, Duplicate, ...)
+  health/
+    router.py        # GET /health
+  users/             # the "users" feature slice
+    models.py         # User, UserRole (SQLAlchemy)
+    schemas.py         # pydantic request/response models
+    repository.py       # data access (UserRepository)
+    security.py          # password hashing + JWT encode/decode
+    service.py            # business logic, HTTP-agnostic (AuthService)
+    dependencies.py        # get_current_user, require_role, ...
+    router.py               # /auth/register, /auth/login, /auth/me
+  main.py            # FastAPI app assembly
+alembic/             # migrations; env.py imports each feature's models.py
 tests/
 ```
+
+Future features (clubs, events, registrations) follow the same shape:
+`app/<feature>/{models,schemas,repository,service,router,dependencies}.py`,
+plus one import line added to `alembic/env.py` so Alembic picks up the new
+models.
 
 ## Running with Docker (recommended)
 
